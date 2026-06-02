@@ -42,11 +42,11 @@ export class StoresService {
   }
 
   async findAll() {
-    return this.storesRepository.find({ relations: ['licenses'] });
+    return this.storesRepository.find({ relations: { licenses: true } });
   }
 
   async findOne(id: string) {
-    const store = await this.storesRepository.findOne({ where: { id }, relations: ['licenses'] });
+    const store = await this.storesRepository.findOne({ where: { id }, relations: { licenses: true } });
     if (!store) {
       throw new NotFoundException('Store not found');
     }
