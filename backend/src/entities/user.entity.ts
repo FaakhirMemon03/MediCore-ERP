@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Store } from './store.entity';
-import { UserRole } from '../../../shared/src/types';
+import type { UserRole } from '../../../shared/src/types';
 
 @Entity('users')
 export class User {
