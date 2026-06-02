@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,11 +23,11 @@ import { AuditLog } from './entities/audit-log.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
+      useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
         const dbType = configService.get<string>('DB_TYPE') || 'sqlite';
         if (dbType === 'postgres') {
           return {
-            type: 'postgres',
+            type: 'postgres' as any,
             host: configService.get<string>('DB_HOST') || 'localhost',
             port: configService.get<number>('DB_PORT') || 5432,
             username: configService.get<string>('DB_USERNAME') || 'postgres',
@@ -38,7 +38,7 @@ import { AuditLog } from './entities/audit-log.entity';
           };
         } else {
           return {
-            type: 'sqlite',
+            type: 'sqlite' as any,
             database: 'medicore_erp.sqlite',
             entities: [User, Store, Branch, License, AuditLog],
             synchronize: true,
