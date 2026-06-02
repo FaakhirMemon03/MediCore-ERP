@@ -1,0 +1,26 @@
+{
+  "name": "medicore-erp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "workspaces": ["desktop", "backend", "admin-panel", "mobile", "shared"],
+  "scripts": {
+    "dev": "npm run start:desktop & npm run start:backend & npm run dev:admin-panel",
+    "start:desktop": "npm --workspace desktop start",
+    "start:backend": "npm --workspace backend run start:dev",
+    "dev:admin-panel": "npm --workspace admin-panel run dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FaakhirMemon03/MediCore-ERP.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/FaakhirMemon03/MediCore-ERP/issues"
+  },
+  "homepage": "https://github.com/FaakhirMemon03/MediCore-ERP#readme"
+}
