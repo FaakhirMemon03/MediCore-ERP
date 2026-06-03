@@ -2,6 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 
+declare global {
+  interface Window {
+    electron: {
+      checkLicense: (storeId: string) => Promise<any>;
+      login: (username: string, password: string) => Promise<any>;
+      changePassword: (newPassword: string, tempToken: string) => Promise<any>;
+      setConfig: (key: string, value: string) => Promise<boolean>;
+      getConfig: (key: string) => Promise<string | null>;
+      openDevTools: () => void;
+    };
+  }
+}
+
 // Client-side simulated license grace check
 // In a full implementation, this calls window.electron.checkLicense()
 interface LicenseState {
