@@ -1,7 +1,8 @@
-import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
+import type { UserRole } from '../../../shared/src/types';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -85,6 +86,53 @@ export class UsersService implements OnApplicationBootstrap {
 
   async findById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { id } });
+  }
+
+  async findByStoreId(storeId: string): Promise<User[]> {
+    return this.usersRepository.find({ where: { storeId, isActive: true } });
+  }
+
+  async createUser(data: {
+    username: string;
+    email: string;
+    password: string;
+    role: UserRole;
+    storeId?: string;
+    branchId?: string;
+  }): Promise<Omit<User, 'passwordHash'>> {
+    // Check for duplicate username or email
+    const existing = await this.usersRepository.findOne({
+      where: [{ username: data.username }, { email: data.email }],
+    });
+    if (existing) {
+      throw new ConflictException('Username or email already exists');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(data.password, salt);
+
+    const user = new User();
+    user.username = data.username;
+    user.email = data.email;
+    user.passwordHash = passwordHash;
+    user.role = data.role;
+    user.storeId = data.storeId ?? '';
+    user.branchId = data.branchId ?? '';
+    user.isPasswordChangeRequired = true; // Force password change on first login
+    user.isActive = true;
+
+    const saved = await this.usersRepository.save(user);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash: _ph, ...safeUser } = saved;
+    return safeUser;
+  }
+
+  async deactivateUser(id: string): Promise<{ success: boolean }> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    user.isActive = false;
+    await this.usersRepository.save(user);
+    return { success: true };
   }
 
   async save(user: User): Promise<User> {
