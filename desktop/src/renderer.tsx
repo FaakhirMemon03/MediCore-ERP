@@ -8,6 +8,9 @@ interface LicenseState {
   isValid: boolean;
   daysRemaining: number;
   gracePeriodActive: boolean;
+  plan?: string;
+  expiryDate?: string;
+  status?: string;
 }
 
 function App() {
@@ -26,32 +29,49 @@ function App() {
 
   const [activeTab, setActiveTab] = useState<'pos' | 'products' | 'batches' | 'license'>('pos');
 
-  // Handle local state or simulate grace period countdown
+  // License Check via Electron IPC
   useEffect(() => {
-    // Check if grace period is expiring
-    const timer = setTimeout(() => {
-      // Simulate real-time license updates
-    }, 1000);
-    return () => clearTimeout(timer);
+    async function checkLicense() {
+      try {
+        const storedStoreId = await window.electron.getConfig('storeId') || 'STORE001';
+        const licenseData = await window.electron.checkLicense(storedStoreId);
+        setLicense(licenseData);
+      } catch (err) {
+        console.error('License check failed', err);
+      }
+    }
+    checkLicense();
+    // Re-check periodically every 15 minutes
+    const timer = setInterval(checkLicense, 15 * 60 * 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       setError('Please fill in all fields');
       return;
     }
-    // Perform authentication
-    if (username === 'cashier' && password === 'password') {
-      setIsAuthenticated(true);
-      setRole('Cashier');
-      setError('');
-    } else if (username === 'owner' && password === 'owner123') {
-      setIsAuthenticated(true);
-      setRole('Owner');
-      setError('');
-    } else {
-      setError('Invalid username or password');
+    
+    try {
+      const response = await window.electron.login(username, password);
+      
+      // If it returned PASSWORD_CHANGE_REQUIRED
+      if (response.status === 'PASSWORD_CHANGE_REQUIRED') {
+        alert(response.message);
+        // In a full implementation, you'd show a change password screen here
+        return;
+      }
+      
+      if (response.access_token && response.user) {
+        setIsAuthenticated(true);
+        setRole(response.user.role as any);
+        setError('');
+      } else {
+        setError('Invalid response from server');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Invalid username or password.');
     }
   };
 
@@ -274,10 +294,10 @@ function App() {
             <div className="license-screen">
               <h2>Subscription & License Status</h2>
               <div className="license-card">
-                <div className="license-row"><span>Store ID:</span><strong>STORE001</strong></div>
-                <div className="license-row"><span>License Status:</span><span className="badge badge-success">ACTIVE</span></div>
-                <div className="license-row"><span>Plan:</span><strong>Professional</strong></div>
-                <div className="license-row"><span>Expires On:</span><strong>01-Jul-2026</strong></div>
+                <div className="license-row"><span>Store ID:</span><strong>{window.electron ? 'Retrieved from Config' : 'STORE001'}</strong></div>
+                <div className="license-row"><span>License Status:</span><span className={`badge ${license.isValid ? 'badge-success' : 'badge-danger'}`}>{license.status || (license.isValid ? 'ACTIVE' : 'EXPIRED')}</span></div>
+                <div className="license-row"><span>Plan:</span><strong>{license.plan || 'N/A'}</strong></div>
+                <div className="license-row"><span>Expires On:</span><strong>{license.expiryDate ? new Date(license.expiryDate).toLocaleDateString() : 'N/A'}</strong></div>
                 <div className="license-row"><span>Offline Grace Remaining:</span><strong>{license.daysRemaining} Days</strong></div>
               </div>
             </div>
