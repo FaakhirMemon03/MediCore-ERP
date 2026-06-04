@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "workspaces": ["desktop", "backend", "admin-panel", "mobile", "shared"],
+  "workspaces": [
+    "desktop",
+    "backend",
+    "admin-panel",
+    "mobile",
+    "shared"
+  ],
   "scripts": {
     "dev": "npm run start:desktop & npm run start:backend & npm run dev:admin-panel",
     "start:desktop": "npm --workspace desktop start",
@@ -22,5 +28,8 @@
   "bugs": {
     "url": "https://github.com/FaakhirMemon03/MediCore-ERP/issues"
   },
-  "homepage": "https://github.com/FaakhirMemon03/MediCore-ERP#readme"
+  "homepage": "https://github.com/FaakhirMemon03/MediCore-ERP#readme",
+  "dependencies": {
+    "typeorm": "^0.3.20"
+  }
 }
