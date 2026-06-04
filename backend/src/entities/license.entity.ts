@@ -9,13 +9,13 @@ export class License {
   @Column({ type: 'varchar', length: 50, default: 'Basic' })
   plan: 'Basic' | 'Professional' | 'Enterprise';
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime' })
   expiryDate: Date;
 
   @Column({ type: 'varchar', length: 50, default: 'Active' })
   status: 'Active' | 'Expired' | 'Suspended';
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   lastCheckedAt: Date;
 
   @CreateDateColumn()
