@@ -41,7 +41,7 @@ export class UsersService implements OnApplicationBootstrap {
       // Create Admin
       const admin = new User();
       admin.username = 'mymn_saab';
-      admin.email = 'admin@admin.com';
+      admin.email = 'admin@access.com';
       admin.passwordHash = passwordHash;
       admin.role = 'Admin';
       admin.isPasswordChangeRequired = true;
@@ -54,7 +54,7 @@ export class UsersService implements OnApplicationBootstrap {
       console.log('                 MYMN SAAB                        ');
       console.log('              SYSTEM ADMINISTRATOR                ');
       console.log('==================================================');
-      console.log(`Admin Email:      admin@admin.com`);
+      console.log(`Admin Email:      admin@access.com`);
       console.log(`Initial Password: ${password}`);
       console.log('FIRST LOGIN PASSWORD CHANGE IS MANDATORY');
       console.log('==================================================\n');
@@ -65,7 +65,7 @@ export class UsersService implements OnApplicationBootstrap {
                          `                 MYMN SAAB                        \n` +
                          `              SYSTEM ADMINISTRATOR                \n` +
                          `==================================================\n` +
-                         `Admin Email:      admin@admin.com\n` +
+                         `Admin Email:      admin@access.com\n` +
                          `Initial Password: ${password}\n` +
                          `Generated At:     ${new Date().toISOString()}\n` +
                          `First login password change is mandatory.\n` +
