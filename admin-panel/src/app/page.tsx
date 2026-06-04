@@ -18,6 +18,8 @@ interface StoreItem {
   version: string;
 }
 
+const BACKEND_URL = 'http://localhost:3001/api';
+
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
@@ -26,6 +28,7 @@ export default function AdminDashboard() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [tempToken, setTempToken] = useState('');
 
   // Notification input
@@ -92,34 +95,38 @@ export default function AdminDashboard() {
     { date: '02-Jun-2026 11:20 PM', admin: 'MYMN SAAB', action: 'Viewed Revenue Reports', store: 'System-wide', ip: '192.168.1.15' },
   ]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setError('Please enter admin credentials');
       return;
     }
-
-    // Match criteria for MYMN SAAB
-    if (email === 'admin@admin.com') {
-      if (password === 'admin123') {
-        // Normal login bypass (simulated)
-        setIsAuthenticated(true);
-        setIsPasswordChangeRequired(false);
-        setError('');
-      } else if (password === 'initialTempPwd') {
-        // Initial login requires password change
+    setIsLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${BACKEND_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Login failed. Check credentials.');
+      } else if (data.passwordChangeRequired) {
         setIsPasswordChangeRequired(true);
-        setTempToken('temp_jwt_token_holder');
-        setError('');
+        setTempToken(data.access_token);
       } else {
-        setError('Invalid password');
+        setTempToken(data.access_token);
+        setIsAuthenticated(true);
       }
-    } else {
-      setError('Unknown Administrator Email');
+    } catch {
+      setError('Cannot connect to server. Make sure backend is running on port 3001.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
@@ -129,11 +136,31 @@ export default function AdminDashboard() {
       setError('Password must be at least 8 characters long');
       return;
     }
-    // Successfully changed password
-    setIsPasswordChangeRequired(false);
-    setIsAuthenticated(true);
+    setIsLoading(true);
     setError('');
-    alert('Password updated successfully! Welcome MYMN SAAB.');
+    try {
+      const res = await fetch(`${BACKEND_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tempToken}`,
+        },
+        body: JSON.stringify({ newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Password change failed.');
+      } else {
+        setIsPasswordChangeRequired(false);
+        setIsAuthenticated(true);
+        setError('');
+        alert('Password updated successfully! Welcome MYMN SAAB.');
+      }
+    } catch {
+      setError('Cannot connect to server.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCreateStore = (e: React.FormEvent) => {
@@ -289,9 +316,10 @@ export default function AdminDashboard() {
               <label>Administrator Email</label>
               <input 
                 type="email" 
-                placeholder="admin@admin.com" 
+                placeholder="admin@access.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="form-group">
@@ -301,12 +329,12 @@ export default function AdminDashboard() {
                 placeholder="••••••••" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <button type="submit" className="btn-primary-glow btn-block">Sign In</button>
-            <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-              Tip: Enter password <strong>admin123</strong> to bypass, or <strong>initialTempPwd</strong> to view the Mandatory Change layout.
-            </div>
+            <button type="submit" className="btn-primary-glow btn-block" disabled={isLoading}>
+              {isLoading ? 'Authenticating...' : 'Sign In'}
+            </button>
           </form>
         </div>
       </div>
