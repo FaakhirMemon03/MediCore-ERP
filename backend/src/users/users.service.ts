@@ -2,7 +2,7 @@ import { Injectable, OnApplicationBootstrap, Logger, NotFoundException, Conflict
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
-import type { UserRole } from '../../../shared/src/types';
+import type { UserRole } from 'shared';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
